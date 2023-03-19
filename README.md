@@ -26,11 +26,12 @@ Alojar este chatbot por ti mismo es bastante fácil. Solo necesitas seguir estos
 - Si quieres obtener el ID de un usuario:
     - Inicia una nueva conversación con @RawDataBot.
     - Envía un mensaje o reenvía un mensaje de cualquier usuario deseado.
-    - Copia el valor del campo message.from.id. 
-- Si quieres obtener el ID de un grupo
-
-> Si es un usuario, debería ser una ID como: 1234567890
-> Si es un grupo debe llevar delante un menos, con una ID como: -1234567890
+    - Copia el valor del campo "id" (dentro de "from" que se encuentra dentro de "message"). 
+    - Si es un usuario, debería ser una ID como: 1234567890
+- Si quieres obtener el ID de un grupo:
+    - Introduce a @RawDataBot en el grupo del que quieras obtener el ID.
+    - Copia el valor de "id" dentro de "chat".
+    - Si es un grupo debe llevar delante un menos, con una ID como: -1234567890
 
 ### Configura el bot:
 
