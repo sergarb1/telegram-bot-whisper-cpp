@@ -21,13 +21,16 @@ Alojar este chatbot por ti mismo es bastante fácil. Solo necesitas seguir estos
 - Escribe el comando /newbot. Establece un nombre y un nombre de usuario.
 - Copia el Token que BotFather te dará.
 
-#### Obtén las ID de los usuarios permitidos:
+#### Obtén las ID de los usuarios/grupos permitidos:
 
-- Inicia una nueva conversación con @RawDataBot.
-- Envía un mensaje o reenvía un mensaje de cualquier usuario deseado.
-- Copia el valor del campo message.from.id. 
+- Si quieres obtener el ID de un usuario:
+    - Inicia una nueva conversación con @RawDataBot.
+    - Envía un mensaje o reenvía un mensaje de cualquier usuario deseado.
+    - Copia el valor del campo message.from.id. 
+- Si quieres obtener el ID de un grupo
 
-> Debería ser una ID como: 1234567890
+> Si es un usuario, debería ser una ID como: 1234567890
+> Si es un grupo debe llevar delante un menos, con una ID como: -1234567890
 
 ### Configura el bot:
 
@@ -44,7 +47,7 @@ Alojar este chatbot por ti mismo es bastante fácil. Solo necesitas seguir estos
   ```
 
   - Establece tu `TELEGRAM_BOT_TOKEN`.
-  - Establece tus `ALLOWED_CHAT_IDS`  (ID de usuarios separados por comas). Establécelo en * para permitir a todos los usuarios.
+  - Establece tus `ALLOWED_CHAT_IDS`  (ID de usuarios/grupos separados por comas). Establécelo en * para permitir a todos los usuarios/grupos.
   - Establece el `WHISPER_MODEL` (base, tiny, small, medium, large)
   - Establece `AUDIO_LANGUAGE` (Si lo dejas en auto detectará el idioma)
 
@@ -72,7 +75,7 @@ Alojar este chatbot por ti mismo es bastante fácil. Solo necesitas seguir estos
   ```
 
   - Establece tu `TELEGRAM_BOT_TOKEN`.
-  - Establece tus `ALLOWED_CHAT_IDS`  (ID de usuarios separados por comas). Establécelo en * para permitir a todos los usuarios.
+  - Establece tus `ALLOWED_CHAT_IDS`  (ID de usuarios/grupos separados por comas). Establécelo en * para permitir a todos los usuarios/grupos.
   - Establece el `WHISPER_MODEL` 
   - Establece `AUDIO_LANGUAGE` (Si lo dejas en auto detectará el idioma)
 - Instala dependencias del sistema:
