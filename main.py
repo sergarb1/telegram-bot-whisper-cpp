@@ -135,11 +135,20 @@ async def processVoiceMessage(update: Update, context: ContextTypes.DEFAULT_TYPE
         finalTime = time.time()
         processingTime = (finalTime - startTime)
 
-        responseMessage = await convertToMarkdown(result, processingTime, audioLanguage)
-        await context.bot.send_message(
-            chat_id=effectiveChatId, text=responseMessage, reply_to_message_id=messageId,
-            parse_mode=telegram.constants.ParseMode.MARKDOWN_V2
-        )
+        #We store result in message
+        message=result[:]
+
+        #While message is not empty, we split it in several messages
+        while(message):
+            # We prepare response message with first 3900 characters and we add markdown 
+            responseMessage = await convertToMarkdown(message[:3900], processingTime, audioLanguage)
+            #Send message (limit 4096 characters)
+            await context.bot.send_message(
+                chat_id=effectiveChatId, text=responseMessage, reply_to_message_id=messageId,
+                parse_mode=telegram.constants.ParseMode.MARKDOWN_V2
+            )
+            #Remove 3900 characters from message
+            message=message[3900:]
 
     except Exception as e:
         #If there is an error, we reply with information about

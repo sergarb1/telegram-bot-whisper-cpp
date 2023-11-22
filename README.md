@@ -60,7 +60,7 @@ Alojar este chatbot por ti mismo es bastante fácil. Solo necesitas seguir estos
   docker compose up --build -d
   ```
 
-# Lanzar el software sin Docker
+# Lanzar el software sin Docker, en maquinas x64/amd64
 ### Configura el bot:
 
 - Clona este repositorio.
@@ -91,7 +91,26 @@ Alojar este chatbot por ti mismo es bastante fácil. Solo necesitas seguir estos
   ```
   ./run.sh
   ```
-  
+
+
+# Lanzar el software sin Docker en máquinas con procesador arm64 (Raspberry, etc.)
+### Configura el bot:
+
+Debe realizarse de manera similar a la instalación en máquinas x64/Amd64, con la salvedad
+de que no existe biblioteca de WhisperCpp en el repositorio y deberemos compilarala.
+
+Para ello, debemos seguir los pasos de compilación e instalación de la biblioteca explicados en https://github.com/aarnphm/whispercpp, utilizando a la hora de hacer el build, el software bazel, es decir, los comandos:
+```
+git clone https://github.com/aarnphm/whispercpp
+cd whispercpp
+https://github.com/aarnphm/whispercpp
+./tools/bazel build //:whispercpp_wheel
+pip install $(./tools/bazel info bazel-bin)/*.whl
+```
+# Descarga de modelos
+
+Si tenéis problemas para descargar los modelos, podéis hacerlo manualmente en https://huggingface.co/ggerganov/whisper.cpp/blob/
+
 # Detalles sobre implementación
 
 A continuación comentamos unos detalles de implementación:
