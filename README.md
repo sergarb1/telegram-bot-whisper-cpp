@@ -103,7 +103,6 @@ Para ello, debemos seguir los pasos de compilación e instalación de la bibliot
 ```
 git clone https://github.com/aarnphm/whispercpp
 cd whispercpp
-https://github.com/aarnphm/whispercpp
 ./tools/bazel build //:whispercpp_wheel
 pip install $(./tools/bazel info bazel-bin)/*.whl
 ```
