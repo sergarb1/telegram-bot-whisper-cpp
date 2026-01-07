@@ -1,10 +1,22 @@
-# Services
 services:
-  telegram-bot-whisper-cpp:
-    image: sergarb1/telegram-bot-whisper-cpp
-    container_name: telegram-bot-whisper-cpp
-    # You have to edit .env file in order to configure deployment
-    env_file: .env
+  whisper-bot:
+    build: .
+    container_name: telegram-whisper-bot
     restart: unless-stopped
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - ALLOWED_CHAT_IDS=${ALLOWED_CHAT_IDS}
+      - TMP_PATH=/tmp/whisper_bot
+      - WHISPER_MODEL=${WHISPER_MODEL:-base}
+      - AUDIO_LANGUAGE=${AUDIO_LANGUAGE:-}
+      - WHISPER_THREADS=${WHISPER_THREADS:-4}
+    volumes:
+      - whisper-tmp:/tmp/whisper_bot
+    healthcheck:
+      test: ["CMD", "python", "-c", "import pywhispercpp; print('Whisper available')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-
+volumes:
+  whisper-tmp:
