@@ -77,7 +77,11 @@ class WhisperTranscriber:
 
     def transcribe(self, audio_path: Path) -> TranscriptionResult:
         start = time.time()
-        segments = self.model.transcribe(str(audio_path))
+        segments = self.model.transcribe(
+          str(audio_path),
+          language=self.language
+    )
+
         text = " ".join(s.text.strip() for s in segments)
         return TranscriptionResult(
             text=text,
