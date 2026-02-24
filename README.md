@@ -24,7 +24,7 @@ Un bot de Telegram que transcribe notas de voz y archivos de audio a texto usand
 
 ```bash
 # 1. Clona el repositorio
-git clone https://github.com/tuusuario/telegram-whisper-bot.git
+git clone https://github.com/sergarb1/telegram-whisper-bot.git
 cd telegram-whisper-bot
 
 # 2. Configura las variables de entorno
