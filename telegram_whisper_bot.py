@@ -3,12 +3,10 @@ import time
 import random
 import logging
 import asyncio
-import subprocess
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 from dataclasses import dataclass
 
-import telegram
 from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
@@ -17,50 +15,80 @@ from telegram.ext import (
     ContextTypes,
     filters
 )
+
 from pywhispercpp.model import Model
 
-# ================= LOGGING (MINIMO) =================
+
+# ================= LOGGING =================
+
 logging.basicConfig(
     level=logging.WARNING,
     format="%(levelname)s:%(name)s:%(message)s"
 )
+
 logger = logging.getLogger(__name__)
 
+
 # ================= DATA =================
+
 @dataclass
 class TranscriptionResult:
     text: str
     processing_time: float
     language: str
     model: str
-    segments: Optional[List[Dict[str, Any]]] = None
+
 
 # ================= AUDIO =================
+
 class AudioProcessor:
+
     def __init__(self, tmp_path: Path):
         self.tmp_path = tmp_path
         self.tmp_path.mkdir(parents=True, exist_ok=True)
 
     async def download_audio(self, context, file_id: str) -> Path:
+
         audio_file = await context.bot.get_file(file_id)
+
         path = self.tmp_path / f"audio_{random.randint(1000,9999)}.ogg"
+
         await audio_file.download_to_drive(custom_path=str(path))
+
         return path
 
     async def convert_audio(self, input_path: Path) -> Path:
+
         wav = input_path.with_suffix(".wav")
+
         cmd = [
-            "ffmpeg", "-i", str(input_path),
-            "-acodec", "pcm_s16le", "-ac", "1", "-ar", "16000",
-            "-loglevel", "error", "-y", str(wav)
+            "ffmpeg",
+            "-nostdin",
+            "-threads", "1",
+            "-i", str(input_path),
+            "-ac", "1",
+            "-ar", "16000",
+            "-f", "wav",
+            "-loglevel", "error",
+            "-y",
+            str(wav)
         ]
+
         proc = await asyncio.create_subprocess_exec(*cmd)
-        await proc.communicate()
+
+        try:
+            await asyncio.wait_for(proc.communicate(), timeout=120)
+        except asyncio.TimeoutError:
+            proc.kill()
+            raise RuntimeError("FFmpeg timeout")
+
         if proc.returncode != 0:
             raise RuntimeError("FFmpeg failed")
+
         return wav
 
     async def cleanup(self, *paths: Path):
+
         for p in paths:
             try:
                 if p and p.exists():
@@ -68,21 +96,36 @@ class AudioProcessor:
             except Exception:
                 pass
 
+
 # ================= WHISPER =================
+
 class WhisperTranscriber:
+
     def __init__(self, model_name="base", language=None, **params):
+
         self.model_name = model_name
         self.language = language
+
         self.model = Model(model_name, **params)
 
     def transcribe(self, audio_path: Path) -> TranscriptionResult:
-        start = time.time()
-        segments = self.model.transcribe(
-          str(audio_path),
-          language=self.language
-    )
 
-        text = " ".join(s.text.strip() for s in segments)
+        start = time.time()
+
+        text_parts = []
+
+        for segment in self.model.transcribe(
+                str(audio_path),
+                language=self.language
+        ):
+
+            t = segment.text.strip()
+
+            if t:
+                text_parts.append(t)
+
+        text = " ".join(text_parts)
+
         return TranscriptionResult(
             text=text,
             processing_time=time.time() - start,
@@ -90,8 +133,11 @@ class WhisperTranscriber:
             model=self.model_name
         )
 
+
 # ================= BOT =================
+
 class TelegramWhisperBot:
+
     def __init__(
         self,
         token: str,
@@ -101,31 +147,44 @@ class TelegramWhisperBot:
         whisper_language: Optional[str],
         whisper_params: Dict[str, Any],
     ):
-        self.allowed_chat_ids = set(allowed_chat_ids)
+
+        self.allowed_chat_ids = set(x for x in allowed_chat_ids if x)
+
         self.tmp_path = Path(tmp_path)
 
         self.audio_processor = AudioProcessor(self.tmp_path)
+
         self.transcriber = WhisperTranscriber(
             whisper_model,
             whisper_language,
             **whisper_params
         )
 
-        # ---- COLA Y SEMAFORO ----
-        self.queue = asyncio.Queue(maxsize=10)
+        # cola trabajos
+        self.queue = asyncio.Queue(maxsize=20)
+
+        # solo 1 transcripción a la vez (reduce RAM)
         self.semaphore = asyncio.Semaphore(1)
 
         self.app = ApplicationBuilder().token(token).build()
+
         self._handlers()
+
         self.app.post_init = self._start_worker
 
-    # ========== WORKER ==========
+
+    # ================= WORKER =================
+
     async def _start_worker(self, app):
+
         asyncio.create_task(self._worker())
 
     async def _worker(self):
+
         while True:
+
             job = await self.queue.get()
+
             try:
                 await self._process_job(**job)
             except Exception as e:
@@ -133,27 +192,43 @@ class TelegramWhisperBot:
             finally:
                 self.queue.task_done()
 
-    # ========== HANDLERS ==========
+
+    # ================= HANDLERS =================
+
     def _handlers(self):
+
         self.app.add_handler(CommandHandler("start", self._start))
+
         self.app.add_handler(MessageHandler(
             filters.VOICE | filters.AUDIO,
             self._audio,
             block=False
         ))
 
-    async def _start(self, update: Update, context):
+
+    async def _start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+
         await update.message.reply_text("🎤 Whisper bot activo")
 
-    async def _audio(self, update: Update, context):
+
+    async def _audio(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+
         chat_id = str(update.effective_chat.id)
+
         if self.allowed_chat_ids and chat_id not in self.allowed_chat_ids:
             return
 
         msg = update.message
+
+        # limitar duración audio
+        if msg.voice and msg.voice.duration > 600:
+            await msg.reply_text("❌ Audio demasiado largo (máx 10 min)")
+            return
+
         file_id = msg.voice.file_id if msg.voice else msg.audio.file_id
 
         try:
+
             self.queue.put_nowait({
                 "update": update,
                 "context": context,
@@ -161,19 +236,37 @@ class TelegramWhisperBot:
                 "chat_id": chat_id,
                 "message_id": msg.message_id
             })
+
             await msg.reply_text("⏳ Audio en cola…")
+
         except asyncio.QueueFull:
+
             await msg.reply_text("❌ Cola llena, espera")
 
-    # ========== JOB ==========
+
+    # ================= JOB =================
+
     async def _process_job(self, update, context, file_id, chat_id, message_id):
+
         async with self.semaphore:
-            orig = wav = None
+
+            orig = None
+            wav = None
+
             try:
+
+                await context.bot.send_message(
+                    chat_id=chat_id,
+                    text="🧠 Transcribiendo...",
+                    reply_to_message_id=message_id
+                )
+
                 orig = await self.audio_processor.download_audio(context, file_id)
+
                 wav = await self.audio_processor.convert_audio(orig)
 
                 loop = asyncio.get_running_loop()
+
                 result = await loop.run_in_executor(
                     None,
                     lambda: self.transcriber.transcribe(wav)
@@ -184,32 +277,70 @@ class TelegramWhisperBot:
                     text=result.text,
                     reply_to_message_id=message_id
                 )
+
             finally:
+
                 await self.audio_processor.cleanup(orig, wav)
 
+
+    # ================= RUN =================
+
     def run(self):
+
         self.app.run_polling(drop_pending_updates=True)
 
+
+
 # ================= MAIN =================
+
 def main():
+
     token = os.environ.get("TELEGRAM_BOT_TOKEN")
+
     if not token:
         raise SystemExit("Missing TELEGRAM_BOT_TOKEN")
 
     bot = TelegramWhisperBot(
+
         token=token,
-        allowed_chat_ids=os.environ.get("ALLOWED_CHAT_IDS", "").split(","),
-        tmp_path=os.environ.get("TMP_PATH", "/tmp"),
-        whisper_model=os.environ.get("WHISPER_MODEL", "base"),
-        whisper_language=os.environ.get("AUDIO_LANGUAGE"),
+
+        allowed_chat_ids=os.environ.get(
+            "ALLOWED_CHAT_IDS",
+            ""
+        ).split(","),
+
+        tmp_path=os.environ.get(
+            "TMP_PATH",
+            "/tmp"
+        ),
+
+        whisper_model=os.environ.get(
+            "WHISPER_MODEL",
+            "base"
+        ),
+
+        whisper_language=os.environ.get(
+            "AUDIO_LANGUAGE"
+        ),
+
         whisper_params={
-            "n_threads": 2,
+
+            "n_threads": max(1, os.cpu_count() // 2),
+
             "print_realtime": False,
+
             "print_progress": False,
+
             "no_context": True,
+
+            "single_segment": False
+
         }
+
     )
+
     bot.run()
+
 
 if __name__ == "__main__":
     main()
