@@ -90,7 +90,7 @@ ALLOWED_CHAT_IDS=123456789,987654321
 WHISPER_MODEL=base            # Modelo a usar
 AUDIO_LANGUAGE=               # Dejar vacío para auto-detección
 WHISPER_THREADS=4             # Número de hilos CPU
-TMP_PATH=/tmp/whisper_bot     # Carpeta temporal
+TMP_PATH=/tmp     # Carpeta temporal
 ```
 
 ## 📦 Modelos disponibles
@@ -149,9 +149,9 @@ services:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - ALLOWED_CHAT_IDS=${ALLOWED_CHAT_IDS}
       - WHISPER_MODEL=${WHISPER_MODEL:-base}
-      - TMP_PATH=/tmp/whisper_bot
+      - TMP_PATH=/tmp
     volumes:
-      - whisper-tmp:/tmp/whisper_bot
+      - whisper-tmp:/tmp
 
 volumes:
   whisper-tmp:

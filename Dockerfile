@@ -20,7 +20,7 @@ RUN useradd -m -u 1000 botuser && chown -R botuser:botuser /app
 USER botuser
 
 # Environment variables with defaults
-ENV TMP_PATH=/tmp/whisper_bot
+ENV TMP_PATH=/tmp
 ENV WHISPER_MODEL=base
 ENV WHISPER_THREADS=4
 

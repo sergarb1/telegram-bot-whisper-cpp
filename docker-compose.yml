@@ -6,12 +6,12 @@ services:
     environment:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - ALLOWED_CHAT_IDS=${ALLOWED_CHAT_IDS}
-      - TMP_PATH=/tmp/whisper_bot
+      - TMP_PATH=/tmp
       - WHISPER_MODEL=${WHISPER_MODEL:-base}
       - AUDIO_LANGUAGE=${AUDIO_LANGUAGE:-}
       - WHISPER_THREADS=${WHISPER_THREADS:-4}
     volumes:
-      - whisper-tmp:/tmp/whisper_bot
+      - whisper-tmp:/tmp
     healthcheck:
       test: ["CMD", "python", "-c", "import pywhispercpp; print('Whisper available')"]
       interval: 30s
