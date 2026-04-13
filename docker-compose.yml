@@ -1,22 +1,11 @@
+version: '3.8'
+
 services:
   whisper-bot:
     build: .
     container_name: telegram-whisper-bot
     restart: unless-stopped
-    environment:
-      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
-      - ALLOWED_CHAT_IDS=${ALLOWED_CHAT_IDS}
-      - TMP_PATH=/tmp
-      - WHISPER_MODEL=${WHISPER_MODEL:-base}
-      - AUDIO_LANGUAGE=${AUDIO_LANGUAGE:-}
-      - WHISPER_THREADS=${WHISPER_THREADS:-4}
+    env_file: .env
     volumes:
-      - whisper-tmp:/tmp
-    healthcheck:
-      test: ["CMD", "python", "-c", "import pywhispercpp; print('Whisper available')"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-volumes:
-  whisper-tmp:
+      - whisper-tmp:/app/tmp
+      - whisper-cache:/home/botuser/.cache/huggingface # 💾 ¡Guarda el modelo aquí!

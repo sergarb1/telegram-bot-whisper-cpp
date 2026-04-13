@@ -1,3 +1,9 @@
-pywhispercpp>=1.4.1
+# Motor de Telegram
 python-telegram-bot[job-queue]>=20.7
+
+# Motor de Transcripción (sustituye a pywhispercpp)
+faster-whisper>=1.0.0
+
+# Opcional: Solo si en tu proyecto sigues haciendo manipulaciones extrañas de audio
+# Aunque faster-whisper ya se encarga de leer los .ogg y .mp4 por su cuenta.
 ffmpeg-python>=0.2.0
