@@ -1,4 +1,4 @@
-# 🤖 Telegram Bot Transcriptor "God Mode" (con Faster-Whisper)
+# 🤖 Telegram Bot Transcriptor (con Faster-Whisper)
 
 ![Python](https://img.shields.io/badge/Python-3.11-blue.svg)
 ![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)
@@ -7,7 +7,7 @@
 
 Un bot de Telegram extremadamente optimizado que transcribe notas de voz, vídeos y archivos de audio a texto usando **faster-whisper** (CTranslate2). Totalmente auto-alojado, privado y diseñado para exprimir al máximo servidores VPS con recursos limitados.
 
-## ✨ Características (God Mode)
+## ✨ Características
 
 - 🎤 **Motor Ultrarrápido:** Migrado a `faster-whisper` con cuantización INT8, hasta 4 veces más rápido que Whisper original.
 - 🔇 **Filtro VAD Inteligente:** Elimina silencios y ruidos de fondo *antes* de procesar, ahorrando hasta un 30% de CPU.
